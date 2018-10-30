@@ -21,6 +21,8 @@ spec:
         env:
         - name: URL
           value: "https://logging-es:9200/project.logging.*/_search"
+        - name: THREADS
+          value: '3'
         ports:
         - containerPort: 8000
           protocol: TCP
