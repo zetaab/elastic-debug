@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: elastic-debug
+  name: elastic-debug
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elastic-debug
+  template:
+    metadata:
+      labels:
+        app: elastic-debug
+    spec:
+      containers:
+      - image: jesseh/elastic-debug:latest
+        imagePullPolicy: Always
+        name: elastic-debug
+        env:
+        - name: URL
+          value: "https://logging-es:9200/project.logging.*/_search"
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+          name: elastic-debug
+      serviceAccount: aggregated-logging-elasticsearch
+      serviceAccountName: aggregated-logging-elasticsearch
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: elastic-debug
+spec:
+  ports:
+  - name: elastic-debug
+    protocol: TCP
+    port: 80
+    targetPort: 8000
+  selector:
+    app: elastic-debug
+  type: ClusterIP
+---
+kind: Route
+apiVersion: v1
+metadata:
+  name: elastic-debug
+  labels:
+    name: elastic-debug
+    net: ext
+spec:
+  host: elastic-debug.dc1-dev.elisa.fi
+  to:
+    kind: Service
+    name: elastic-debug
+    port:
+       targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
